@@ -1,5 +1,6 @@
 import axios from "axios";
-const baseUrl = "http://localhost:3001/persons";
+const baseUrl = "/api/persons";
+// const baseUrl = "https://fullstack-open-helsinki-course-part3.onrender.com/api/persons";
 
 async function getAll() {
   const response = await axios.get(baseUrl);
