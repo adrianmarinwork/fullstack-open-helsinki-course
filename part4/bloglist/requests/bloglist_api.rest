@@ -1,0 +1,20 @@
+GET http://localhost:3003/api/blogs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkcmlhbk1hcmluUkVTVDIiLCJpZCI6IjY3MDJhYmQ1YTk1ZGVmZjE3Y2Y3YTU2MyIsImlhdCI6MTcyODIzMjU0MH0.31_FCRj8q2Vkd2XmFhI9JxngSpRqvg8CpcmucH4Nq1M
+
+###
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkcmlhbk1hcmluUkVTVDIiLCJpZCI6IjY3MDJhYmQ1YTk1ZGVmZjE3Y2Y3YTU2MyIsImlhdCI6MTcyODIzMjU0MH0.31_FCRj8q2Vkd2XmFhI9JxngSpRqvg8CpcmucH4Nq1M
+
+{
+  "title": "Adrian Title With Bearer Token",
+  "author": "Adrian",
+  "url": "none",
+  "likes": 10,
+  "userId": "6702abd5a95deff17cf7a563"
+}
+
+###
+DELETE http://localhost:3003/api/blogs/6702ab28a95deff17cf7a554
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkcmlhbk1hcmluUkVTVDIiLCJpZCI6IjY3MDJhYmQ1YTk1ZGVmZjE3Y2Y3YTU2MyIsImlhdCI6MTcyODIzMjU0MH0.31_FCRj8q2Vkd2XmFhI9JxngSpRqvg8CpcmucH4Nq1M
