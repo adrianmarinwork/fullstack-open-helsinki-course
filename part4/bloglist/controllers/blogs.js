@@ -2,13 +2,14 @@ const blogsRouter = require('express').Router();
 
 const Blog = require('../models/blog');
 const User = require('../models/user');
+const middleware = require('../utils/middleware');
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
   response.json(blogs);
 });
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   let newBlogRequest = request.body;
 
   if (!newBlogRequest.title || !newBlogRequest.url) {
@@ -33,38 +34,46 @@ blogsRouter.post('/', async (request, response) => {
   response.status(201).json(result);
 });
 
-blogsRouter.put('/:id', async function (request, response, next) {
-  const body = request.body;
+blogsRouter.put(
+  '/:id',
+  middleware.userExtractor,
+  async function (request, response, next) {
+    const body = request.body;
 
-  const blog = {
-    title: body.title,
-    likes: body.likes,
-    author: body.author,
-    url: body.url,
-  };
+    const blog = {
+      title: body.title,
+      likes: body.likes,
+      author: body.author,
+      url: body.url,
+    };
 
-  const updatedPerson = await Blog.findByIdAndUpdate(
-    request.params.id,
-    { ...blog },
-    { new: true }
-  );
+    const updatedPerson = await Blog.findByIdAndUpdate(
+      request.params.id,
+      { ...blog },
+      { new: true }
+    );
 
-  response.status(201).json(updatedPerson);
-});
-
-blogsRouter.delete('/:id', async (request, response) => {
-  const userId = request.user.id;
-  const id = request.params.id;
-  const blog = await Blog.findById(id);
-
-  if (blog.user.toString() !== userId.toString()) {
-    return response
-      .status(401)
-      .json({ error: 'User is not the owner of the blog' });
+    response.status(201).json(updatedPerson);
   }
+);
 
-  await Blog.findByIdAndDelete(id);
-  response.status(204).end();
-});
+blogsRouter.delete(
+  '/:id',
+  middleware.userExtractor,
+  async (request, response) => {
+    const userId = request.user.id;
+    const id = request.params.id;
+    const blog = await Blog.findById(id);
+
+    if (blog.user.toString() !== userId.toString()) {
+      return response
+        .status(401)
+        .json({ error: 'User is not the owner of the blog' });
+    }
+
+    await Blog.findByIdAndDelete(id);
+    response.status(204).end();
+  }
+);
 
 module.exports = blogsRouter;
