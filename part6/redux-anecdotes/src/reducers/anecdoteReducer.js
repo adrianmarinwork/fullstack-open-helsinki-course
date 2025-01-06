@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import anecdoteService from '../services/anecdotes';
 
 const anecdotesAtStart = [
   'If it hurts, do it more often',
@@ -25,31 +26,45 @@ const anecdoteSlice = createSlice({
   name: 'anecdotes',
   initialState: [],
   reducers: {
-    voteAnecdote(state, action) {
-      const id = action.payload;
-      const anecdoteToVote = state.find((anecdote) => anecdote.id === id);
-      const changedAnecdote = {
-        ...anecdoteToVote,
-        votes: anecdoteToVote.votes + 1,
-      };
-
-      return state.map(function (anecdote) {
-        if (anecdote.id === id) {
-          return changedAnecdote;
-        }
-
-        return anecdote;
-      });
-    },
-    addAnecdote(state, action) {
-      state.push(action.payload);
-    },
     setAnecdotes(state, action) {
       return action.payload;
+    },
+    appendAnecdote(state, action) {
+      state.push(action.payload);
+    },
+    updateAnecdotes(state, action) {
+      const anecdoteUpdated = action.payload;
+      const updatedState = state.map((anecdote) =>
+        anecdote.id === anecdoteUpdated.id ? anecdoteUpdated : anecdote
+      );
+      return updatedState;
     },
   },
 });
 
-export const { voteAnecdote, addAnecdote, setAnecdotes } =
+export const { appendAnecdote, setAnecdotes, updateAnecdotes } =
   anecdoteSlice.actions;
+
+export function initializeAnecdotes() {
+  return async (dispatch) => {
+    const anecdotes = await anecdoteService.getAll();
+    dispatch(setAnecdotes(anecdotes));
+  };
+}
+
+export function addAnecdote(content) {
+  return async (dispatch) => {
+    const anecdote = await anecdoteService.addNewAnecdote(content);
+    dispatch(appendAnecdote(anecdote));
+  };
+}
+
+export function updateAnecdote(anecdote) {
+  return async (dispatch) => {
+    const anecdoteUpdated = { ...anecdote, votes: anecdote.votes + 1 };
+    await anecdoteService.updateAnecdote(anecdoteUpdated);
+    dispatch(updateAnecdotes(anecdoteUpdated));
+  };
+}
+
 export default anecdoteSlice.reducer;
