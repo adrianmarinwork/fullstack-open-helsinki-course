@@ -5,14 +5,16 @@ import Notification from './components/Notification';
 import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
+import { useDispatch } from 'react-redux';
+import { setNotification } from './reducers/notificationReducer';
 
 const App = () => {
+  const dispatch = useDispatch();
+
   const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-  const [notificationMessage, setNotificationMessage] = useState('');
-  const [isErrorMessage, setIsErroMessage] = useState(false);
 
   useEffect(() => {
     blogService.getAll().then(function (blogs) {
@@ -42,14 +44,12 @@ const App = () => {
       localStorage.setItem('loggedUser', JSON.stringify(userApi));
     } catch (error) {
       console.log('Error login to server: ', error);
-      setNotificationMessage('Wrong username or password');
-      setIsErroMessage(true);
+      const notification = {
+        message: 'Wrong username or password',
+        isError: true,
+      };
+      dispatch(setNotification(notification, 5000));
     }
-
-    setTimeout(() => {
-      setNotificationMessage('');
-      setIsErroMessage(false);
-    }, 5000);
   };
 
   const onClickLogout = function (event) {
@@ -64,22 +64,19 @@ const App = () => {
     try {
       const blogApi = await blogService.saveBlog(blog);
       setBlogs(blogs.concat(blogApi));
-      setNotificationMessage(
-        `A new blog ${blog.title} by ${blog.author} added.`
-      );
-      setIsErroMessage(false);
+      const notification = {
+        message: `A new blog ${blog.title} by ${blog.author} added.`,
+        isError: false,
+      };
+      dispatch(setNotification(notification, 5000));
 
       blogFormRef.current.toggleVisibility();
     } catch (error) {
       console.log('Error adding new blog: ', error);
-      setNotificationMessage("Couldn't add new blog");
-      setIsErroMessage(true);
-    }
 
-    setTimeout(() => {
-      setNotificationMessage('');
-      setIsErroMessage(false);
-    }, 5000);
+      const notification = { message: "Couldn't add new blog", isError: true };
+      dispatch(setNotification(notification, 5000));
+    }
   };
 
   const handleDeleteBlog = async function (event, blogToDelete) {
@@ -92,19 +89,19 @@ const App = () => {
         await blogService.deleteBlog(blogToDelete.id);
 
         setBlogs(blogs.filter((blog) => blog.id !== blogToDelete.id));
-        setNotificationMessage('Blog deleted successfully');
-        setIsErroMessage(false);
+
+        const notification = {
+          message: 'Blog deleted successfully',
+          isError: false,
+        };
+        dispatch(setNotification(notification, 5000));
       }
     } catch (error) {
       console.log('Error deleting blog: ', error);
-      setNotificationMessage("Couldn't delete blog");
-      setIsErroMessage(true);
-    }
 
-    setTimeout(() => {
-      setNotificationMessage('');
-      setIsErroMessage(false);
-    }, 5000);
+      const notification = { message: "Couldn't delete blog", isError: true };
+      dispatch(setNotification(notification, 5000));
+    }
   };
 
   const loginForm = () => (
@@ -137,7 +134,7 @@ const App = () => {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification message={notificationMessage} isError={isErrorMessage} />
+        <Notification />
         {loginForm()}
       </div>
     );
@@ -146,7 +143,7 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <Notification message={notificationMessage} isError={isErrorMessage} />
+      <Notification />
       <div>
         {user.username} logged in
         <button onClick={onClickLogout}> Logout </button>
