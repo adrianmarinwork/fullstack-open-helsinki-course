@@ -1,10 +1,7 @@
 import { useState } from 'react';
 
-import blogService from '../services/blogs';
-
-const Blog = ({ blog, user, deleteBlog }) => {
+const Blog = ({ blog, user, deleteBlog, likeBlog }) => {
   const [visible, setVisible] = useState(false);
-  const [likes, setLikes] = useState(blog.likes);
 
   const blogStyle = {
     paddingTop: 10,
@@ -34,16 +31,6 @@ const Blog = ({ blog, user, deleteBlog }) => {
     );
   }
 
-  const increaseBlogLikes = async function (event) {
-    event.preventDefault();
-
-    const blogWithLikesUpdated = blog;
-    blogWithLikesUpdated.likes += 1;
-
-    const blogUpdated = await blogService.updateBlog(blogWithLikesUpdated);
-    setLikes(blogUpdated.likes);
-  };
-
   const isUserCreatorOfBlog = user?.username === blog?.user?.username;
 
   return (
@@ -56,8 +43,11 @@ const Blog = ({ blog, user, deleteBlog }) => {
       </div>
       <span className="urlSpan">{blog.url}</span>
       <div>
-        <span>Likes: {likes}</span>
-        <button onClick={increaseBlogLikes} style={{ marginLeft: '5px' }}>
+        <span>Likes: {blog.likes}</span>
+        <button
+          onClick={(event) => likeBlog(event, blog)}
+          style={{ marginLeft: '5px' }}
+        >
           Like
         </button>
       </div>

@@ -1,33 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import Blog from './components/Blog';
 import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
 import Togglable from './components/Togglable';
 import blogService from './services/blogs';
-import loginService from './services/login';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setNotification } from './reducers/notificationReducer';
+import { addBlogPost, initializeBlogPosts } from './reducers/blogPostReducer';
+import BlogPostList from './components/BlogPostList';
+import { loginUser, logoutUser, updateUser } from './reducers/userReducer';
 
 const App = () => {
   const dispatch = useDispatch();
 
-  const [blogs, setBlogs] = useState([]);
+  const user = useSelector((state) => state.user);
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    blogService.getAll().then(function (blogs) {
-      const sortedBlogs = blogs.sort((a, b) => b.likes - a.likes);
-      setBlogs(sortedBlogs);
-    });
+    dispatch(initializeBlogPosts());
   }, []);
 
   useEffect(() => {
     const loggedUserJSON = localStorage.getItem('loggedUser');
     if (loggedUserJSON) {
       const userObj = JSON.parse(loggedUserJSON);
-      setUser(userObj);
+      dispatch(updateUser(userObj));
       blogService.setApiToken(userObj.token);
     }
   }, []);
@@ -36,8 +34,7 @@ const App = () => {
     event.preventDefault();
 
     try {
-      const userApi = await loginService.login({ username, password });
-      setUser(userApi);
+      const userApi = await dispatch(loginUser({ username, password }));
       blogService.setApiToken(userApi.token);
       setUsername('');
       setPassword('');
@@ -54,16 +51,16 @@ const App = () => {
 
   const onClickLogout = function (event) {
     event.preventDefault();
-    setUser(null);
+    dispatch(logoutUser());
     localStorage.removeItem('loggedUser');
   };
 
-  const handleNewBlog = async function (newBlogObj) {
+  const handleNewBlog = function (newBlogObj) {
     const blog = newBlogObj;
 
     try {
-      const blogApi = await blogService.saveBlog(blog);
-      setBlogs(blogs.concat(blogApi));
+      dispatch(addBlogPost(blog));
+
       const notification = {
         message: `A new blog ${blog.title} by ${blog.author} added.`,
         isError: false,
@@ -75,31 +72,6 @@ const App = () => {
       console.log('Error adding new blog: ', error);
 
       const notification = { message: "Couldn't add new blog", isError: true };
-      dispatch(setNotification(notification, 5000));
-    }
-  };
-
-  const handleDeleteBlog = async function (event, blogToDelete) {
-    try {
-      const doWeHaveToDelete = window.confirm(
-        `Remove blog ${blogToDelete.title} by ${blogToDelete.author}`
-      );
-
-      if (doWeHaveToDelete) {
-        await blogService.deleteBlog(blogToDelete.id);
-
-        setBlogs(blogs.filter((blog) => blog.id !== blogToDelete.id));
-
-        const notification = {
-          message: 'Blog deleted successfully',
-          isError: false,
-        };
-        dispatch(setNotification(notification, 5000));
-      }
-    } catch (error) {
-      console.log('Error deleting blog: ', error);
-
-      const notification = { message: "Couldn't delete blog", isError: true };
       dispatch(setNotification(notification, 5000));
     }
   };
@@ -153,14 +125,7 @@ const App = () => {
         <NewBlogForm createBlog={handleNewBlog} />
       </Togglable>
       <br />
-      {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user}
-          deleteBlog={handleDeleteBlog}
-        />
-      ))}
+      <BlogPostList />
     </div>
   );
 };
