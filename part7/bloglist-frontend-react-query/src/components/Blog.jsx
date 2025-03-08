@@ -1,9 +1,12 @@
+import { useState } from 'react';
+
 import blogService from '../services/blogs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 const Blog = ({ blog, user, notificationDispatch }) => {
   const navigate = useNavigate();
+  const [comment, setComment] = useState('');
 
   const blogStyle = {
     paddingTop: 10,
@@ -75,6 +78,13 @@ const Blog = ({ blog, user, notificationDispatch }) => {
     }, 5000);
   };
 
+  const handleAddComment = async function (event, blog) {
+    const blogWithCommentsUpdated = blog;
+    blogWithCommentsUpdated.comments.push(comment);
+    updateBlogMutation.mutate(blogWithCommentsUpdated);
+    setComment('');
+  };
+
   const isUserCreatorOfBlog = user?.username === blog?.user?.username;
 
   console.log('blog: ', blog);
@@ -102,6 +112,17 @@ const Blog = ({ blog, user, notificationDispatch }) => {
         ''
       )}
       <h3>Comments</h3>
+      <div>
+        <input
+          type="text"
+          value={comment}
+          name="Comment"
+          onChange={(event) => setComment(event.target.value)}
+        ></input>
+        <button onClick={(event) => handleAddComment(event, blog)}>
+          Add Comment
+        </button>
+      </div>
       <ul>
         {blog.comments.map((comment) => (
           <li key={comment}>{comment}</li>
