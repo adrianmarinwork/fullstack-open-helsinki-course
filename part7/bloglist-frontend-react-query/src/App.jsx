@@ -10,6 +10,7 @@ import NotificationContext from './contexts/NotificationContext';
 import UserContext from './contexts/UserContext';
 import BlogList from './components/BlogList';
 import UserList from './components/UserList';
+import User from './components/User';
 
 const App = () => {
   const [notification, notificationDispatch] = useContext(NotificationContext);
@@ -37,6 +38,18 @@ const App = () => {
       userService.setApiToken(userObj.token);
     }
   }, []);
+
+  const usersResults = useQuery({
+    queryKey: ['users'],
+    queryFn: userService.getAll,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  let users = usersResults.data ?? [];
+
+  const match = useMatch('/users/:id');
+  const userUrl = match ? users.find((us) => us.id === match.params.id) : null;
 
   const handleLogin = async function (event) {
     event.preventDefault();
@@ -125,7 +138,8 @@ const App = () => {
             />
           }
         />
-        <Route path="/users" element={<UserList />} />
+        <Route path="/users" element={<UserList users={users} />} />
+        <Route path="/users/:id" element={<User user={userUrl} />} />
       </Routes>
     </div>
   );
