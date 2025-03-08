@@ -1,11 +1,9 @@
-import { useState } from 'react';
-
 import blogService from '../services/blogs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
-const Blog = ({ blog, user, deleteBlog }) => {
-  const [visible, setVisible] = useState(false);
-  const [likes, setLikes] = useState(blog.likes);
+const Blog = ({ blog, user, notificationDispatch }) => {
+  const navigate = useNavigate();
 
   const blogStyle = {
     paddingTop: 10,
@@ -24,22 +22,13 @@ const Blog = ({ blog, user, deleteBlog }) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
   });
 
-  const toggleDetailsVisible = function (event) {
-    event.preventDefault();
-    setVisible(!visible);
-  };
+  const deleteBlogMutation = useMutation({
+    mutationFn: blogService.deleteBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
+  });
 
-  if (!visible) {
-    return (
-      <div style={blogStyle}>
-        <div>
-          {blog.title}
-          <button onClick={toggleDetailsVisible} style={{ marginLeft: '5px' }}>
-            Show Details
-          </button>
-        </div>
-      </div>
-    );
+  if (!blog) {
+    return null;
   }
 
   const increaseBlogLikes = async function (event) {
@@ -49,7 +38,41 @@ const Blog = ({ blog, user, deleteBlog }) => {
     blogWithLikesUpdated.likes += 1;
 
     updateBlogMutation.mutate(blogWithLikesUpdated);
-    setLikes(blogWithLikesUpdated.likes);
+  };
+
+  const handleDeleteBlog = async function (event, blogToDelete) {
+    try {
+      const doWeHaveToDelete = window.confirm(
+        `Remove blog ${blogToDelete.title} by ${blogToDelete.author}`
+      );
+
+      if (doWeHaveToDelete) {
+        deleteBlogMutation.mutate(blogToDelete.id);
+
+        const notification = {
+          message: 'Blog deleted successfully',
+          isError: false,
+        };
+        notificationDispatch({
+          type: 'SET_NOTIFICATION',
+          payload: notification,
+        });
+      }
+
+      navigate('/');
+    } catch (error) {
+      console.log('Error deleting blog: ', error);
+      const notification = {
+        message: "Couldn't delete blog",
+        isError: true,
+      };
+      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
+    }
+
+    setTimeout(() => {
+      const notification = { message: '', isError: false };
+      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
+    }, 5000);
   };
 
   const isUserCreatorOfBlog = user?.username === blog?.user?.username;
@@ -57,14 +80,11 @@ const Blog = ({ blog, user, deleteBlog }) => {
   return (
     <div style={blogStyle} className="blog">
       <div>
-        <span>{blog.title}</span>
-        <button onClick={toggleDetailsVisible} style={{ marginLeft: '5px' }}>
-          Hide Details
-        </button>
+        <h2>{blog.title}</h2>
       </div>
       <span className="urlSpan">{blog.url}</span>
       <div>
-        <span>Likes: {likes}</span>
+        <span>Likes: {blog.likes}</span>
         <button onClick={increaseBlogLikes} style={{ marginLeft: '5px' }}>
           Like
         </button>
@@ -72,7 +92,9 @@ const Blog = ({ blog, user, deleteBlog }) => {
       <span>{blog.author}</span>
       {isUserCreatorOfBlog ? (
         <div>
-          <button onClick={(event) => deleteBlog(event, blog)}>Delete</button>
+          <button onClick={(event) => handleDeleteBlog(event, blog)}>
+            Delete
+          </button>
         </div>
       ) : (
         ''

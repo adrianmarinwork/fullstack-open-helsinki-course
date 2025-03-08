@@ -11,6 +11,7 @@ import UserContext from './contexts/UserContext';
 import BlogList from './components/BlogList';
 import UserList from './components/UserList';
 import User from './components/User';
+import Blog from './components/Blog';
 
 const App = () => {
   const [notification, notificationDispatch] = useContext(NotificationContext);
@@ -48,8 +49,15 @@ const App = () => {
 
   let users = usersResults.data ?? [];
 
-  const match = useMatch('/users/:id');
-  const userUrl = match ? users.find((us) => us.id === match.params.id) : null;
+  const matchUser = useMatch('/users/:id');
+  const userUrl = matchUser
+    ? users.find((us) => us.id === matchUser.params.id)
+    : null;
+
+  const matchBlog = useMatch('/blogs/:id');
+  const blogUrl = matchBlog
+    ? blogs.find((us) => us.id === matchBlog.params.id)
+    : null;
 
   const handleLogin = async function (event) {
     event.preventDefault();
@@ -133,13 +141,22 @@ const App = () => {
           element={
             <BlogList
               blogs={blogs}
-              user={user}
               notificationDispatch={notificationDispatch}
             />
           }
         />
         <Route path="/users" element={<UserList users={users} />} />
         <Route path="/users/:id" element={<User user={userUrl} />} />
+        <Route
+          path="/blogs/:id"
+          element={
+            <Blog
+              blog={blogUrl}
+              user={user}
+              notificationDispatch={notificationDispatch}
+            />
+          }
+        />
       </Routes>
     </div>
   );

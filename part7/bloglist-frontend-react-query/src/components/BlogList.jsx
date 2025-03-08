@@ -1,22 +1,27 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 
 import Togglable from './Togglable';
 import NewBlogForm from './NewBlogForm';
-import Blog from './Blog';
 import blogService from '../services/blogs';
 
-const BlogList = ({ blogs, user, notificationDispatch }) => {
+const BlogList = ({ blogs, notificationDispatch }) => {
   const blogFormRef = useRef();
   const queryClient = useQueryClient();
 
+  const blogStyle = {
+    paddingTop: 10,
+    paddingLeft: 2,
+    border: 'solid',
+    borderWidth: 1,
+    marginBottom: 5,
+    display: 'flex',
+    flexDirection: 'column',
+  };
+
   const newBlogMutation = useMutation({
     mutationFn: blogService.saveBlog,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
-  });
-
-  const deleteBlogMutation = useMutation({
-    mutationFn: blogService.deleteBlog,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
   });
 
@@ -47,39 +52,6 @@ const BlogList = ({ blogs, user, notificationDispatch }) => {
     }, 5000);
   };
 
-  const handleDeleteBlog = async function (event, blogToDelete) {
-    try {
-      const doWeHaveToDelete = window.confirm(
-        `Remove blog ${blogToDelete.title} by ${blogToDelete.author}`
-      );
-
-      if (doWeHaveToDelete) {
-        deleteBlogMutation.mutate(blogToDelete.id);
-
-        const notification = {
-          message: 'Blog deleted successfully',
-          isError: false,
-        };
-        notificationDispatch({
-          type: 'SET_NOTIFICATION',
-          payload: notification,
-        });
-      }
-    } catch (error) {
-      console.log('Error deleting blog: ', error);
-      const notification = {
-        message: "Couldn't delete blog",
-        isError: true,
-      };
-      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }
-
-    setTimeout(() => {
-      const notification = { message: '', isError: false };
-      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }, 5000);
-  };
-
   return (
     <>
       <Togglable buttonLabel="New Blog" ref={blogFormRef}>
@@ -87,12 +59,9 @@ const BlogList = ({ blogs, user, notificationDispatch }) => {
       </Togglable>
       <br />
       {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user}
-          deleteBlog={handleDeleteBlog}
-        />
+        <div style={blogStyle} key={blog.id} className="blog">
+          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+        </div>
       ))}
     </>
   );
