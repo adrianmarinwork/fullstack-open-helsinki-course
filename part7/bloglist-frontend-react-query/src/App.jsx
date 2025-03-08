@@ -13,6 +13,27 @@ import UserList from './components/UserList';
 import User from './components/User';
 import Blog from './components/Blog';
 
+const Menu = ({ user, onClickLogout }) => {
+  const padding = {
+    paddingRight: 5,
+  };
+
+  return (
+    <div>
+      <Link style={padding} to="/">
+        Blogs
+      </Link>
+      <Link style={padding} to="/users">
+        Users
+      </Link>
+      <span style={padding}>
+        {user.username} logged in
+        <button onClick={onClickLogout}> Logout </button>
+      </span>
+    </div>
+  );
+};
+
 const App = () => {
   const [notification, notificationDispatch] = useContext(NotificationContext);
   const [user, userDispatch] = useContext(UserContext);
@@ -127,12 +148,9 @@ const App = () => {
 
   return (
     <div>
+      <Menu user={user} onClickLogout={onClickLogout} />
       <h2>blogs</h2>
       <Notification notification={notification} />
-      <div>
-        {user.username} logged in
-        <button onClick={onClickLogout}> Logout </button>
-      </div>
       <br />
 
       <Routes>
