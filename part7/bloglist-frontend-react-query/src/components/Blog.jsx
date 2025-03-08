@@ -77,6 +77,8 @@ const Blog = ({ blog, user, notificationDispatch }) => {
 
   const isUserCreatorOfBlog = user?.username === blog?.user?.username;
 
+  console.log('blog: ', blog);
+
   return (
     <div style={blogStyle} className="blog">
       <div>
@@ -99,6 +101,12 @@ const Blog = ({ blog, user, notificationDispatch }) => {
       ) : (
         ''
       )}
+      <h3>Comments</h3>
+      <ul>
+        {blog.comments.map((comment) => (
+          <li key={comment}>{comment}</li>
+        ))}
+      </ul>
     </div>
   );
 };

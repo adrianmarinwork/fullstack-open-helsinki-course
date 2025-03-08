@@ -11,7 +11,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFkc
   "author": "Adrian",
   "url": "none",
   "likes": 10,
-  "userId": "6702abd5a95deff17cf7a563"
+  "userId": "6702abd5a95deff17cf7a563",
+  "comments": ["esta guapo", "dafuq"]
 }
 
 ###

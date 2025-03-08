@@ -45,6 +45,7 @@ blogsRouter.put(
       likes: body.likes,
       author: body.author,
       url: body.url,
+      comments: body.comments,
     };
 
     const updatedPerson = await Blog.findByIdAndUpdate(
