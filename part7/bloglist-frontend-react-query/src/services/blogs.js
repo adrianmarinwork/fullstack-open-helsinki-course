@@ -38,4 +38,11 @@ const setApiToken = (apiTokenParam) => {
   apiToken = `Bearer ${apiTokenParam}`;
 };
 
-export default { getAll, saveBlog, setApiToken, updateBlog, deleteBlog };
+export default {
+  getAll,
+  saveBlog,
+  setApiToken,
+  updateBlog,
+  deleteBlog,
+  apiToken,
+};

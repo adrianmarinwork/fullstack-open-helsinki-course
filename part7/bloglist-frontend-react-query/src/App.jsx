@@ -1,32 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useContext } from 'react';
+import { Routes, Route, Link, useMatch, useNavigate } from 'react-router-dom';
 
-import Blog from './components/Blog';
-import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
-import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
+import userService from './services/users';
 import NotificationContext from './contexts/NotificationContext';
 import UserContext from './contexts/UserContext';
+import BlogList from './components/BlogList';
+import UserList from './components/UserList';
 
 const App = () => {
-  const [notification, dispatch] = useContext(NotificationContext);
+  const [notification, notificationDispatch] = useContext(NotificationContext);
   const [user, userDispatch] = useContext(UserContext);
-  const queryClient = useQueryClient();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
-  const newBlogMutation = useMutation({
-    mutationFn: blogService.saveBlog,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
-  });
-
-  const deleteBlogMutation = useMutation({
-    mutationFn: blogService.deleteBlog,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] }),
-  });
 
   const results = useQuery({
     queryKey: ['blogs'],
@@ -44,6 +34,7 @@ const App = () => {
       const userObj = JSON.parse(loggedUserJSON);
       userDispatch({ type: 'SET_USER', payload: userObj });
       blogService.setApiToken(userObj.token);
+      userService.setApiToken(userObj.token);
     }
   }, []);
 
@@ -54,6 +45,7 @@ const App = () => {
       const userApi = await loginService.login({ username, password });
       userDispatch({ type: 'SET_USER', payload: userApi });
       blogService.setApiToken(userApi.token);
+      userService.setApiToken(userApi.token);
       setUsername('');
       setPassword('');
       localStorage.setItem('loggedUser', JSON.stringify(userApi));
@@ -63,12 +55,12 @@ const App = () => {
         message: 'Wrong username or password',
         isError: true,
       };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
+      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
     }
 
     setTimeout(() => {
       const notification = { message: '', isError: false };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
+      notificationDispatch({ type: 'SET_NOTIFICATION', payload: notification });
     }, 5000);
   };
 
@@ -76,63 +68,6 @@ const App = () => {
     event.preventDefault();
     userDispatch({ type: 'SET_USER', payload: null });
     localStorage.removeItem('loggedUser');
-  };
-
-  const handleNewBlog = async function (newBlogObj) {
-    const blog = newBlogObj;
-
-    try {
-      newBlogMutation.mutate(blog);
-      const notification = {
-        message: `A new blog ${blog.title} by ${blog.author} added.`,
-        isError: false,
-      };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-
-      blogFormRef.current.toggleVisibility();
-    } catch (error) {
-      console.log('Error adding new blog: ', error);
-      const notification = {
-        message: "Couldn't add new blog",
-        isError: true,
-      };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }
-
-    setTimeout(() => {
-      const notification = { message: '', isError: false };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }, 5000);
-  };
-
-  const handleDeleteBlog = async function (event, blogToDelete) {
-    try {
-      const doWeHaveToDelete = window.confirm(
-        `Remove blog ${blogToDelete.title} by ${blogToDelete.author}`
-      );
-
-      if (doWeHaveToDelete) {
-        deleteBlogMutation.mutate(blogToDelete.id);
-
-        const notification = {
-          message: 'Blog deleted successfully',
-          isError: false,
-        };
-        dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-      }
-    } catch (error) {
-      console.log('Error deleting blog: ', error);
-      const notification = {
-        message: "Couldn't delete blog",
-        isError: true,
-      };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }
-
-    setTimeout(() => {
-      const notification = { message: '', isError: false };
-      dispatch({ type: 'SET_NOTIFICATION', payload: notification });
-    }, 5000);
   };
 
   const loginForm = () => (
@@ -159,8 +94,6 @@ const App = () => {
     </form>
   );
 
-  const blogFormRef = useRef();
-
   if (user === null) {
     return (
       <div>
@@ -180,18 +113,20 @@ const App = () => {
         <button onClick={onClickLogout}> Logout </button>
       </div>
       <br />
-      <Togglable buttonLabel="New Blog" ref={blogFormRef}>
-        <NewBlogForm createBlog={handleNewBlog} />
-      </Togglable>
-      <br />
-      {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user}
-          deleteBlog={handleDeleteBlog}
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <BlogList
+              blogs={blogs}
+              user={user}
+              notificationDispatch={notificationDispatch}
+            />
+          }
         />
-      ))}
+        <Route path="/users" element={<UserList />} />
+      </Routes>
     </div>
   );
 };
